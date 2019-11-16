@@ -8,18 +8,20 @@ namespace WasteReduction.Controllers
 {
 	[ApiController]
 	[Route("[controller]")]
-	public class WeatherForecastController : ControllerBase
+	public class DataController : ControllerBase
 	{
 		private static readonly string[] Summaries = new[]
 		{
 			"Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 		};
 
-		private readonly ILogger<WeatherForecastController> _logger;
+		private readonly ILogger<DataController> _logger;
+		private readonly KGroupApiHelper _kGroupApiHelper;
 
-		public WeatherForecastController(ILogger<WeatherForecastController> logger)
+		public DataController(ILogger<DataController> logger, KGroupApiHelper kGroupApiHelper)
 		{
 			_logger = logger;
+			_kGroupApiHelper = kGroupApiHelper;
 		}
 
 		[HttpGet]
