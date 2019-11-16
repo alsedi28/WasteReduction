@@ -2,7 +2,7 @@
 
 namespace WasteReduction.Models.KGroupAPI
 {
-	public class SearchProductsJsonRequest
+	public class SearchProductsByQueryJsonRequest
 	{
 		[JsonProperty("query")]
 		public string Query { get; set; }
