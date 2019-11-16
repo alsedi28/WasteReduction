@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+using WasteReduction.Models.KGroupAPI;
+using ProductResult = WasteReduction.Models.Product;
 
 namespace WasteReduction.Controllers
 {
@@ -10,31 +12,36 @@ namespace WasteReduction.Controllers
 	[Route("[controller]")]
 	public class DataController : ControllerBase
 	{
-		private static readonly string[] Summaries = new[]
-		{
-			"Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-		};
-
-		private readonly ILogger<DataController> _logger;
 		private readonly KGroupApiHelper _kGroupApiHelper;
 
-		public DataController(ILogger<DataController> logger, KGroupApiHelper kGroupApiHelper)
+		public DataController(KGroupApiHelper kGroupApiHelper)
 		{
-			_logger = logger;
 			_kGroupApiHelper = kGroupApiHelper;
 		}
 
-		[HttpGet]
-		public IEnumerable<WeatherForecast> Get()
+		[HttpGet("products")]
+		public async Task<IActionResult> GetAsync(string name, int amount)
 		{
-			var rng = new Random();
-			return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+			var request = new SearchProductsJsonRequest
 			{
-				Date = DateTime.Now.AddDays(index),
-				TemperatureC = rng.Next(-20, 55),
-				Summary = Summaries[rng.Next(Summaries.Length)]
-			})
-			.ToArray();
+				Query = name,
+				View = new ViewField
+				{
+					Limit = amount
+				}
+			};
+
+			var response = await _kGroupApiHelper.MakePostRequest<SearchProductsJsonRequest, SearchProductsJsonResponse>(request, "https://kesko.azure-api.net/v1/search/products");
+
+			var products = response.Results.Select(p => new ProductResult
+			{
+				Ean = p.Ean,
+				Name = string.IsNullOrEmpty(p.Names.EnglishName) ? p.Names.FinnishName : p.Names.EnglishName,
+				PictureUrl = p.Pictures.FirstOrDefault()?.Url,
+				ManufacturerCountry = p.Attributes.ManufacturerCountry.Value.Value
+			}).ToList();
+
+			return Ok(products);
 		}
 	}
 }
