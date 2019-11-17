@@ -10,6 +10,7 @@ using WasteReduction.Models.Entities;
 using Product = WasteReduction.Models.Entities.Product;
 using WasteReduction.Models.KGroupAPI;
 using Microsoft.EntityFrameworkCore;
+using WasteReduction.Models.Responses;
 
 namespace WasteReduction.Controllers
 {
@@ -50,7 +51,31 @@ namespace WasteReduction.Controllers
 				ManufacturerCountry = p.Attributes.ManufacturerCountry.Value.Value
 			}).ToList();
 
-			return Ok(products);
+			return Ok(new GetResponse<List<Product>> { Result = products });
+		}
+
+		[HttpGet("allproducts")]
+		public async Task<IActionResult> GetAllProductsAsync()
+		{
+			var request = new SearchProductsByEanJsonRequest
+			{
+				Filters = new Filter
+				{
+					Ean = _applicationDbContext.Products.Select(p => p.ProductId).Distinct().ToList()
+				}
+			};
+
+			var response = await _kGroupApiHelper.MakePostRequest<SearchProductsByEanJsonRequest, SearchProductsJsonResponse>(request, "https://kesko.azure-api.net/v1/search/products");
+
+			var products = response.Results.Select(p => new Product
+			{
+				ProductId = p.Ean,
+				Name = string.IsNullOrEmpty(p.Names.EnglishName) ? p.Names.FinnishName : p.Names.EnglishName,
+				PictureUrl = p.Pictures.FirstOrDefault()?.Url,
+				ManufacturerCountry = p.Attributes.ManufacturerCountry.Value.Value
+			}).ToList();
+
+			return Ok(new GetResponse<List<Product>> { Result = products });
 		}
 
 		[HttpGet("receipts")]
@@ -83,7 +108,7 @@ namespace WasteReduction.Controllers
 				product.PictureUrl = tempProduct.Pictures.FirstOrDefault()?.Url;
 			}
 
-			return Ok(receipts);
+			return Ok(new GetResponse<List<Receipt>> { Result = receipts });
 		}
 
 		[HttpGet("products/{id}/recomindation")]
@@ -103,7 +128,7 @@ namespace WasteReduction.Controllers
 				}
 			};
 
-			return Ok(result);
+			return Ok(new GetResponse<Recomindation> { Result = result });
 		}
 
 		[HttpGet("recomindations")]
@@ -139,11 +164,11 @@ namespace WasteReduction.Controllers
 				}
 			};
 
-			return Ok(result);
+			return Ok(new GetResponse<List<Recomindation>> { Result = result });
 		}
 
 		[HttpPost("ParseReceiptData")]
-		//[NonAction]
+		[NonAction]
 		public IActionResult ParseReceiptData()
 		{
 			string path = Path.Combine(_hostingEnvironment.ContentRootPath, "Data\\ReceiptData.csv");
