@@ -64,8 +64,6 @@ namespace WasteReduction
 			return result;
 		}
 
-
-
 		private HttpClient CreateHttpClient()
 		{
 			var client = new HttpClient();

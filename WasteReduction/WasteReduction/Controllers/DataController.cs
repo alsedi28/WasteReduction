@@ -112,6 +112,7 @@ namespace WasteReduction.Controllers
 		}
 
 		[HttpGet("products/{id}/recomindation")]
+		[Obsolete("Method on Stub")]
 		public IActionResult GetRecomindationForProduct(string id)
 		{
 			var result = new Recomindation
@@ -132,6 +133,7 @@ namespace WasteReduction.Controllers
 		}
 
 		[HttpGet("recomindations")]
+		[Obsolete("Method on Stub")]
 		public IActionResult GetRecomindations()
 		{
 			var result = new List<Recomindation>
